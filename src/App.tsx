@@ -11,7 +11,7 @@ import {
   useLocation,
   Router as WouterRouter,
 } from 'wouter';
-import VIDEO from './assets/naturn9ne.mov'
+import VIDEO from './assets/naturn9ne.mp4'
 
 const queryClient = new QueryClient();
 
