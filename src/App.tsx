@@ -70,7 +70,7 @@ function Home() {
   };
 
   return (
-    <div className="fixed inset-0 bg-black overflow-hidden select-none">
+    <main className="fixed inset-0 bg-black overflow-hidden select-none">
 
       {/* ── noise overlay (done phase only) ─────────────────────────────── */}
       <AnimatePresence>
@@ -132,7 +132,7 @@ function Home() {
         animate={phase === 'video' ? brandVideo : brandDone}
         transition={moveTransition}
       >
-        <motion.p
+        <motion.h1
           className={'font-display uppercase whitespace-nowrap text-white/90'}
           animate={phase === 'video' ? brandTextVideo : brandTextDone }
           transition={moveTransition}
@@ -157,7 +157,7 @@ function Home() {
             9
           </motion.span>
           <span className="text-white/90">ne</span>
-        </motion.p>
+        </motion.h1>
       </motion.div>
 
       {/* ── tagline ──────────────────────────────────────────────────────── */}
@@ -216,7 +216,7 @@ function Home() {
           </motion.button>
         )}
       </AnimatePresence>
-    </div>
+    </main>
   );
 }
 
