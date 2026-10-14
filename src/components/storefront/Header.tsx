@@ -1,5 +1,6 @@
 import { Link } from 'wouter';
-import { ShoppingBag } from 'lucide-react'
+import { MobileNavLink } from '@/components/storefront/MobileNavLink';
+import { ShoppingBag, Shirt, Home } from 'lucide-react'
 
 
 export default function Header() {
@@ -7,6 +8,7 @@ export default function Header() {
   const cartItemCount = cart?.totalQuantity || 0;
   
   return (
+    <>
     <header className="top-0 z-50 sticky w-full bg-background/80 backdrop-blur-md border-b border-white/5">
       <div className="container mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -25,7 +27,15 @@ export default function Header() {
             </div>
           </nav>
         </div>
-    </header>
+      </header>
+       <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-white/5 pb-safe">
+        <div className="flex items-center justify-around h-16 px-4">
+          <MobileNavLink href="/" icon={Home} label="Home" />
+          <MobileNavLink href="/shop" icon={Shirt} label="Shop" />
+          <MobileNavLink href="/cart" icon={ShoppingBag} label="Cart" badge={cartItemCount} />
+        </div>
+      </div>
+    </>
   )
 }
 
