@@ -13,6 +13,9 @@ if (Number.isNaN(port) || port <= 0) {
 
 const basePath = process.env.BASE_PATH ?? '/';
 
+// The Express API server (pnpm dev:server); /api requests are proxied to it in dev.
+const apiPort = process.env.API_PORT ?? '3001';
+
 export default defineConfig({
   base: basePath,
   plugins: [
@@ -22,6 +25,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(import.meta.dirname, 'src'),
+      '@shared': path.resolve(import.meta.dirname, 'shared'),
     },
     dedupe: ['react', 'react-dom'],
   },
@@ -37,6 +41,9 @@ export default defineConfig({
     allowedHosts: true,
     fs: {
       strict: true,
+    },
+    proxy: {
+      '/api': `http://localhost:${apiPort}`,
     },
   },
   preview: {
