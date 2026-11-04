@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:server": "tsx watch --tsconfig server/tsconfig.json server/index.ts",
-    "start:server": "NODE_ENV=production tsx --tsconfig server/tsconfig.json server/index.ts",
+    "dev:server": "tsx watch --env-file-if-exists=.env --tsconfig server/tsconfig.json server/index.ts",
+    "start:server": "NODE_ENV=production tsx --env-file-if-exists=.env --tsconfig server/tsconfig.json server/index.ts",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
