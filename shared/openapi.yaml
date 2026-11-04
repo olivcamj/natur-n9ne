@@ -1,0 +1,854 @@
+openapi: 3.1.0
+info:
+  title: Api
+  description: Fashion store API — Shopify Storefront proxy + cart management
+  version: 0.1.0
+
+servers:
+  - url: /
+    description: Same origin (Vite proxies /api to the Express server in dev)
+
+# Public by default; admin + storage operations override with bearerAuth.
+security: []
+
+tags:
+  - name: health
+    description: Liveness check
+  - name: store
+    description: Store-wide settings and branding
+  - name: products
+    description: Storefront product catalog (Shopify proxy)
+  - name: collections
+    description: Storefront collections (Shopify proxy)
+  - name: cart
+    description: Shopify cart management
+  - name: admin
+    description: Admin dashboard, products and orders (requires login)
+  - name: storage
+    description: Uploads for design artwork (requires login)
+
+paths:
+  /api/healthz:
+    get:
+      operationId: healthCheck
+      summary: Health check
+      tags: [health]
+      responses:
+        '200':
+          description: Server is up
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HealthStatus' }
+
+  /api/store/info:
+    get:
+      operationId: getStoreInfo
+      summary: Get store name, currency, and branding info
+      tags: [store]
+      responses:
+        '200':
+          description: Store info
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StoreInfo' }
+        default: { $ref: '#/components/responses/Error' }
+
+  # ------------------------------------------------------------------ Products
+
+  /api/products:
+    get:
+      operationId: listProducts
+      summary: List all products
+      tags: [products]
+      parameters:
+        - $ref: '#/components/parameters/First'
+        - $ref: '#/components/parameters/After'
+        - name: collectionHandle
+          in: query
+          schema: { type: [string, 'null'] }
+        - name: sortKey
+          in: query
+          schema:
+            type: string
+            enum: [TITLE, PRICE, BEST_SELLING, CREATED_AT, RELEVANCE]
+        - name: reverse
+          in: query
+          schema: { type: boolean }
+      responses:
+        '200':
+          description: A page of products
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProductConnection' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/products/featured:
+    get:
+      operationId: getFeaturedProducts
+      summary: Get featured / hero products for homepage
+      tags: [products]
+      parameters:
+        - $ref: '#/components/parameters/First'
+      responses:
+        '200':
+          description: Featured products
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Product' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/products/{handle}:
+    get:
+      operationId: getProduct
+      summary: Get a single product by handle
+      tags: [products]
+      parameters:
+        - name: handle
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: The product
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Product' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        default: { $ref: '#/components/responses/Error' }
+
+  # --------------------------------------------------------------- Collections
+
+  /api/collections:
+    get:
+      operationId: listCollections
+      summary: List all collections
+      tags: [collections]
+      parameters:
+        - $ref: '#/components/parameters/First'
+      responses:
+        '200':
+          description: Collections
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Collection' }
+        default: { $ref: '#/components/responses/Error' }
+
+  # ---------------------------------------------------------------------- Cart
+
+  /api/cart:
+    post:
+      operationId: createCart
+      summary: Create a new cart with an initial line item
+      tags: [cart]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CartInput' }
+      responses:
+        '200': { $ref: '#/components/responses/Cart' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/cart/{cartId}:
+    parameters:
+      - $ref: '#/components/parameters/CartId'
+    get:
+      operationId: getCart
+      summary: Get cart by ID
+      tags: [cart]
+      responses:
+        '200': { $ref: '#/components/responses/Cart' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/cart/{cartId}/lines:
+    parameters:
+      - $ref: '#/components/parameters/CartId'
+    post:
+      operationId: addCartLine
+      summary: Add a line item to a cart
+      tags: [cart]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CartLineInput' }
+      responses:
+        '200': { $ref: '#/components/responses/Cart' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/cart/{cartId}/lines/{lineId}:
+    parameters:
+      - $ref: '#/components/parameters/CartId'
+      - name: lineId
+        in: path
+        required: true
+        schema: { type: string }
+    put:
+      operationId: updateCartLine
+      summary: Update line item quantity
+      tags: [cart]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CartLineUpdate' }
+      responses:
+        '200': { $ref: '#/components/responses/Cart' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        default: { $ref: '#/components/responses/Error' }
+    delete:
+      operationId: removeCartLine
+      summary: Remove a line item from cart
+      tags: [cart]
+      responses:
+        '200': { $ref: '#/components/responses/Cart' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/cart/{cartId}/checkout:
+    parameters:
+      - $ref: '#/components/parameters/CartId'
+    post:
+      operationId: getCheckoutUrl
+      summary: Get Shopify hosted checkout URL for cart
+      tags: [cart]
+      responses:
+        '200':
+          description: Checkout URL
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CheckoutUrlResponse' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        default: { $ref: '#/components/responses/Error' }
+
+  # --------------------------------------------------------------------- Admin
+
+  /api/admin/auth/login:
+    post:
+      operationId: adminLogin
+      summary: Admin password login
+      tags: [admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminLoginInput' }
+      responses:
+        '200':
+          description: Logged in
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminAuthResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/admin/auth/me:
+    get:
+      operationId: getAdminMe
+      summary: Check admin auth status
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Token is valid
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminAuthResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/admin/dashboard:
+    get:
+      operationId: getAdminDashboard
+      summary: Store dashboard overview stats
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Dashboard stats
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminDashboard' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/admin/products:
+    get:
+      operationId: listAdminProducts
+      summary: List all products (admin view with full detail)
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/First'
+        - $ref: '#/components/parameters/After'
+        - name: query
+          in: query
+          schema: { type: [string, 'null'] }
+      responses:
+        '200':
+          description: A page of products
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminProductConnection' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/admin/products/{productId}:
+    parameters:
+      - $ref: '#/components/parameters/ProductId'
+    get:
+      operationId: getAdminProduct
+      summary: Get full product detail (admin)
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { $ref: '#/components/responses/AdminProduct' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        default: { $ref: '#/components/responses/Error' }
+    patch:
+      operationId: updateAdminProduct
+      summary: Update product title, description, or status
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminProductUpdate' }
+      responses:
+        '200': { $ref: '#/components/responses/AdminProduct' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/admin/products/{productId}/image:
+    parameters:
+      - $ref: '#/components/parameters/ProductId'
+    put:
+      operationId: setAdminProductImage
+      summary: Replace the featured product image (for uploading custom artwork)
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminProductImageInput' }
+      responses:
+        '200': { $ref: '#/components/responses/AdminProduct' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/admin/orders:
+    get:
+      operationId: listAdminOrders
+      summary: List orders (newest first)
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/First'
+        - $ref: '#/components/parameters/After'
+        - name: status
+          in: query
+          description: Filter by fulfillment status e.g. unfulfilled
+          schema: { type: [string, 'null'] }
+      responses:
+        '200':
+          description: A page of orders
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminOrderConnection' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /api/admin/orders/{orderId}:
+    get:
+      operationId: getAdminOrder
+      summary: Get full order details
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: The order
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminOrder' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        default: { $ref: '#/components/responses/Error' }
+
+  # ------------------------------------------------------------------- Storage
+
+  /api/storage/uploads/request-url:
+    post:
+      operationId: requestUploadUrl
+      summary: Request a presigned upload URL for design artwork
+      tags: [storage]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UploadUrlInput' }
+      responses:
+        '200':
+          description: Presigned upload URL
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UploadUrlResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        default: { $ref: '#/components/responses/Error' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Token returned by POST /api/admin/auth/login
+
+  parameters:
+    First:
+      name: first
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 250 }
+    After:
+      name: after
+      in: query
+      description: Cursor from pageInfo.endCursor
+      schema: { type: [string, 'null'] }
+    CartId:
+      name: cartId
+      in: path
+      required: true
+      description: Shopify Cart GID (URL-encoded)
+      schema: { type: string }
+    ProductId:
+      name: productId
+      in: path
+      required: true
+      description: Shopify Product GID (URL-encoded)
+      schema: { type: string }
+
+  responses:
+    Cart:
+      description: The updated cart
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Cart' }
+    AdminProduct:
+      description: The product
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/AdminProduct' }
+    BadRequest:
+      description: Invalid input
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    Unauthorized:
+      description: Missing or invalid admin token
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    Error:
+      description: Unexpected error
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+
+  schemas:
+    HealthStatus:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string }
+
+    ApiError:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string }
+
+    Money:
+      type: object
+      required: [amount, currencyCode]
+      properties:
+        amount: { type: string, examples: ['189.00'] }
+        currencyCode: { type: string, examples: [USD] }
+
+    Image:
+      type: [object, 'null']
+      properties:
+        url: { type: string }
+        altText: { type: [string, 'null'] }
+
+    StoreInfo:
+      type: object
+      required: [name, currencyCode]
+      properties:
+        name: { type: string }
+        description: { type: [string, 'null'] }
+        currencyCode: { type: string }
+        moneyFormat: { type: string }
+
+    # ---------------------------------------------------------------- Products
+
+    ProductImage:
+      type: object
+      required: [url]
+      properties:
+        url: { type: string }
+        altText: { type: [string, 'null'] }
+        width: { type: [integer, 'null'] }
+        height: { type: [integer, 'null'] }
+
+    SelectedOption:
+      type: object
+      required: [name, value]
+      properties:
+        name: { type: string }
+        value: { type: string }
+
+    ProductVariant:
+      type: object
+      required: [id, title, availableForSale, price]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        availableForSale: { type: boolean }
+        quantityAvailable: { type: [integer, 'null'] }
+        price: { $ref: '#/components/schemas/Money' }
+        compareAtPrice:
+          type: [object, 'null']
+          properties:
+            amount: { type: string }
+            currencyCode: { type: string }
+        selectedOptions:
+          type: array
+          items: { $ref: '#/components/schemas/SelectedOption' }
+        image: { $ref: '#/components/schemas/Image' }
+
+    Product:
+      type: object
+      required: [id, title, handle, availableForSale, images, priceRange, variants]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        handle: { type: string }
+        descriptionHtml: { type: string }
+        availableForSale: { type: boolean }
+        productType: { type: string }
+        tags:
+          type: array
+          items: { type: string }
+        featuredImage: { $ref: '#/components/schemas/Image' }
+        images:
+          type: array
+          items: { $ref: '#/components/schemas/ProductImage' }
+        priceRange:
+          type: object
+          required: [minVariantPrice, maxVariantPrice]
+          properties:
+            minVariantPrice: { $ref: '#/components/schemas/Money' }
+            maxVariantPrice: { $ref: '#/components/schemas/Money' }
+        variants:
+          type: array
+          items: { $ref: '#/components/schemas/ProductVariant' }
+        options:
+          type: array
+          items:
+            type: object
+            required: [name, values]
+            properties:
+              name: { type: string }
+              values:
+                type: array
+                items: { type: string }
+
+    ProductConnection:
+      type: object
+      required: [products, pageInfo]
+      properties:
+        products:
+          type: array
+          items: { $ref: '#/components/schemas/Product' }
+        pageInfo:
+          type: object
+          required: [hasNextPage, hasPreviousPage]
+          properties:
+            hasNextPage: { type: boolean }
+            hasPreviousPage: { type: boolean }
+            startCursor: { type: [string, 'null'] }
+            endCursor: { type: [string, 'null'] }
+
+    Collection:
+      type: object
+      required: [id, title, handle]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        handle: { type: string }
+        description: { type: string }
+        image: { $ref: '#/components/schemas/Image' }
+
+    # -------------------------------------------------------------------- Cart
+
+    CartLine:
+      type: object
+      required: [id, quantity, merchandise, cost]
+      properties:
+        id: { type: string }
+        quantity: { type: integer }
+        merchandise:
+          type: object
+          required: [id, title, product]
+          properties:
+            id: { type: string }
+            title: { type: string }
+            price: { $ref: '#/components/schemas/Money' }
+            image: { $ref: '#/components/schemas/Image' }
+            selectedOptions:
+              type: array
+              items: { $ref: '#/components/schemas/SelectedOption' }
+            product:
+              type: object
+              required: [id, title, handle]
+              properties:
+                id: { type: string }
+                title: { type: string }
+                handle: { type: string }
+                featuredImage: { $ref: '#/components/schemas/Image' }
+        cost:
+          type: object
+          required: [totalAmount]
+          properties:
+            totalAmount: { $ref: '#/components/schemas/Money' }
+
+    Cart:
+      type: object
+      required: [id, checkoutUrl, totalQuantity, lines, cost]
+      properties:
+        id: { type: string }
+        checkoutUrl: { type: string }
+        totalQuantity: { type: integer }
+        lines:
+          type: array
+          items: { $ref: '#/components/schemas/CartLine' }
+        cost:
+          type: object
+          required: [totalAmount, subtotalAmount]
+          properties:
+            totalAmount: { $ref: '#/components/schemas/Money' }
+            subtotalAmount: { $ref: '#/components/schemas/Money' }
+
+    CartInput:
+      type: object
+      required: [variantId, quantity]
+      properties:
+        variantId:
+          type: string
+          description: Shopify ProductVariant GID
+        quantity: { type: integer, minimum: 1 }
+
+    CartLineInput:
+      type: object
+      required: [variantId, quantity]
+      properties:
+        variantId: { type: string }
+        quantity: { type: integer, minimum: 1 }
+
+    CartLineUpdate:
+      type: object
+      required: [quantity]
+      properties:
+        quantity: { type: integer, minimum: 0 }
+
+    CheckoutUrlResponse:
+      type: object
+      required: [checkoutUrl]
+      properties:
+        checkoutUrl: { type: string }
+
+    # ------------------------------------------------------------------- Admin
+
+    AdminLoginInput:
+      type: object
+      required: [password]
+      properties:
+        password: { type: string }
+
+    AdminAuthResponse:
+      type: object
+      required: [token]
+      properties:
+        token: { type: string }
+
+    AdminOrderSummary:
+      type: object
+      required: [id, name, totalPrice, financialStatus, fulfillmentStatus, createdAt, customerName]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        totalPrice: { type: string }
+        financialStatus: { type: string }
+        fulfillmentStatus: { type: [string, 'null'] }
+        createdAt: { type: string, format: date-time }
+        customerName: { type: string }
+        itemCount: { type: integer }
+
+    AdminDashboard:
+      type: object
+      required: [totalProducts, totalOrders, pendingOrders, revenueToday, revenueTotal, lowStockCount, recentOrders]
+      properties:
+        totalProducts: { type: integer }
+        totalOrders: { type: integer }
+        pendingOrders: { type: integer }
+        revenueToday: { type: string }
+        revenueTotal: { type: string }
+        lowStockCount: { type: integer }
+        recentOrders:
+          type: array
+          items: { $ref: '#/components/schemas/AdminOrderSummary' }
+
+    AdminProductStatus:
+      type: string
+      enum: [ACTIVE, DRAFT, ARCHIVED]
+
+    AdminProduct:
+      type: object
+      required: [id, title, handle, status, totalInventory, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        handle: { type: string }
+        description: { type: [string, 'null'] }
+        status: { $ref: '#/components/schemas/AdminProductStatus' }
+        featuredImageUrl: { type: [string, 'null'] }
+        totalInventory: { type: integer }
+        variantCount: { type: integer }
+        price: { type: [string, 'null'] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        tags:
+          type: array
+          items: { type: string }
+
+    AdminProductConnection:
+      type: object
+      required: [products, pageInfo]
+      properties:
+        products:
+          type: array
+          items: { $ref: '#/components/schemas/AdminProduct' }
+        pageInfo: { $ref: '#/components/schemas/CursorPageInfo' }
+
+    AdminProductUpdate:
+      type: object
+      properties:
+        title: { type: string }
+        description: { type: string }
+        status: { $ref: '#/components/schemas/AdminProductStatus' }
+        tags:
+          type: array
+          items: { type: string }
+
+    AdminProductImageInput:
+      type: object
+      required: [imageUrl]
+      properties:
+        imageUrl: { type: string }
+        altText: { type: string }
+
+    AdminOrderLineItem:
+      type: object
+      required: [id, title, quantity, price]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        variantTitle: { type: [string, 'null'] }
+        quantity: { type: integer }
+        price: { type: string }
+        imageUrl: { type: [string, 'null'] }
+
+    AdminOrder:
+      type: object
+      required: [id, name, totalPrice, financialStatus, fulfillmentStatus, createdAt, lineItems]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        totalPrice: { type: string }
+        subtotalPrice: { type: string }
+        financialStatus: { type: string }
+        fulfillmentStatus: { type: [string, 'null'] }
+        createdAt: { type: string, format: date-time }
+        note: { type: [string, 'null'] }
+        customerName: { type: string }
+        customerEmail: { type: [string, 'null'] }
+        shippingAddress:
+          type: [object, 'null']
+          properties:
+            address1: { type: [string, 'null'] }
+            city: { type: [string, 'null'] }
+            province: { type: [string, 'null'] }
+            country: { type: [string, 'null'] }
+            zip: { type: [string, 'null'] }
+        lineItems:
+          type: array
+          items: { $ref: '#/components/schemas/AdminOrderLineItem' }
+
+    AdminOrderConnection:
+      type: object
+      required: [orders, pageInfo]
+      properties:
+        orders:
+          type: array
+          items: { $ref: '#/components/schemas/AdminOrder' }
+        pageInfo: { $ref: '#/components/schemas/CursorPageInfo' }
+
+    CursorPageInfo:
+      type: object
+      required: [hasNextPage]
+      properties:
+        hasNextPage: { type: boolean }
+        endCursor: { type: [string, 'null'] }
+
+    # ----------------------------------------------------------------- Storage
+
+    UploadUrlInput:
+      type: object
+      required: [filename, contentType]
+      properties:
+        filename: { type: string }
+        contentType: { type: string, examples: [image/png] }
+        folder: { type: string }
+
+    UploadUrlResponse:
+      type: object
+      required: [uploadUrl, objectPath, publicUrl]
+      properties:
+        uploadUrl: { type: string }
+        objectPath: { type: string }
+        publicUrl: { type: string }

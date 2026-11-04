@@ -9,6 +9,8 @@
     "start:server": "NODE_ENV=production tsx --env-file-if-exists=.env --tsconfig server/tsconfig.json server/index.ts",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "lint:api": "npx @redocly/cli@1.34.0 lint shared/openapi.yaml",
+    "docs:api": "npx @redocly/cli@1.34.0 build-docs shared/openapi.yaml -o dist/api-docs.html",
     "preview": "vite preview"
   },
   "dependencies": {
