@@ -10,6 +10,8 @@ const EnvSchema = z.object({
   // Shopify (filled in as the product/cart/admin routes are built)
   SHOPIFY_STORE_DOMAIN: z.string().optional(), // e.g. my-store.myshopify.com
   SHOPIFY_STOREFRONT_TOKEN: z.string().optional(),
+  // Pinned so a Shopify release can't change response shapes under us.
+  SHOPIFY_API_VERSION: z.string().default('2026-04'),
   SHOPIFY_ADMIN_TOKEN: z.string().optional(),
 
   // Admin login
