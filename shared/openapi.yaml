@@ -150,7 +150,7 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/CartInput' }
       responses:
-        '200': { $ref: '#/components/responses/Cart' }
+        '201': { $ref: '#/components/responses/Cart' }
         '400': { $ref: '#/components/responses/BadRequest' }
         default: { $ref: '#/components/responses/Error' }
 
