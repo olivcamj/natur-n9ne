@@ -23,6 +23,7 @@ export type ListAdminProductsParams = z.infer<typeof S.ListAdminProductsParamsSc
 
 export type AdminOrderLineItem = z.infer<typeof S.AdminOrderLineItemSchema>;
 export type AdminOrderShippingAddress = z.infer<typeof S.AdminOrderShippingAddressSchema>;
+export type AdminOrderTracking = z.infer<typeof S.AdminOrderTrackingSchema>;
 export type AdminOrder = z.infer<typeof S.AdminOrderSchema>;
 export type AdminOrderConnectionPageInfo = z.infer<typeof S.CursorPageInfoSchema>;
 export type AdminOrderConnection = z.infer<typeof S.AdminOrderConnectionSchema>;

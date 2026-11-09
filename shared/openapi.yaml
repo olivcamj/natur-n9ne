@@ -336,7 +336,11 @@ paths:
       - $ref: '#/components/parameters/ProductId'
     put:
       operationId: setAdminProductImage
-      summary: Replace the featured product image (for uploading custom artwork)
+      summary: Add an extra storefront photo to a product
+      description: >
+        Adds media only; never removes or reorders existing images. Does not
+        change the printed design: Tapstitch prints the artwork stored in
+        Tapstitch, so design changes are republished from Tapstitch.
       tags: [admin]
       security: [{ bearerAuth: [] }]
       requestBody:
@@ -721,14 +725,18 @@ components:
 
     AdminDashboard:
       type: object
-      required: [totalProducts, totalOrders, pendingOrders, revenueToday, revenueTotal, lowStockCount, recentOrders]
+      required: [totalProducts, totalOrders, delayedOrders, revenueToday, revenueTotal, lowStockCount, recentOrders]
       properties:
         totalProducts: { type: integer }
         totalOrders: { type: integer }
-        pendingOrders: { type: integer }
+        delayedOrders:
+          type: integer
+          description: Open orders still unfulfilled several days after purchase (capped at 100)
         revenueToday: { type: string }
         revenueTotal: { type: string }
-        lowStockCount: { type: integer }
+        lowStockCount:
+          type: integer
+          description: Low stock among products that track inventory (untracked POD items excluded)
         recentOrders:
           type: array
           items: { $ref: '#/components/schemas/AdminOrderSummary' }
@@ -739,7 +747,7 @@ components:
 
     AdminProduct:
       type: object
-      required: [id, title, handle, status, totalInventory, createdAt, updatedAt]
+      required: [id, title, handle, status, inventoryTracked, totalInventory, createdAt, updatedAt]
       properties:
         id: { type: string }
         title: { type: string }
@@ -747,7 +755,12 @@ components:
         description: { type: [string, 'null'] }
         status: { $ref: '#/components/schemas/AdminProductStatus' }
         featuredImageUrl: { type: [string, 'null'] }
-        totalInventory: { type: integer }
+        inventoryTracked:
+          type: boolean
+          description: False for print-on-demand items whose stock the supplier manages
+        totalInventory:
+          type: [integer, 'null']
+          description: null when inventory isn't tracked
         variantCount: { type: integer }
         price: { type: [string, 'null'] }
         createdAt: { type: string, format: date-time }
@@ -795,7 +808,7 @@ components:
 
     AdminOrder:
       type: object
-      required: [id, name, totalPrice, financialStatus, fulfillmentStatus, createdAt, lineItems]
+      required: [id, name, totalPrice, financialStatus, fulfillmentStatus, createdAt, tracking, lineItems]
       properties:
         id: { type: string }
         name: { type: string }
@@ -815,6 +828,15 @@ components:
             province: { type: [string, 'null'] }
             country: { type: [string, 'null'] }
             zip: { type: [string, 'null'] }
+        tracking:
+          type: array
+          description: One entry per shipped parcel, synced back by the supplier
+          items:
+            type: object
+            properties:
+              company: { type: [string, 'null'] }
+              number: { type: [string, 'null'] }
+              url: { type: [string, 'null'] }
         lineItems:
           type: array
           items: { $ref: '#/components/schemas/AdminOrderLineItem' }

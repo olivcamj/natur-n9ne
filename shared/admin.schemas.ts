@@ -27,9 +27,11 @@ export const AdminOrderSummarySchema = z.object({
 export const AdminDashboardSchema = z.object({
   totalProducts: z.number().int(),
   totalOrders: z.number().int(),
-  pendingOrders: z.number().int(),
+  /** Open orders still unfulfilled several days after purchase (supplier delays) */
+  delayedOrders: z.number().int(),
   revenueToday: z.string(),
   revenueTotal: z.string(),
+  /** Low stock among products that track inventory (untracked POD items excluded) */
   lowStockCount: z.number().int(),
   recentOrders: z.array(AdminOrderSummarySchema),
 });
@@ -45,7 +47,10 @@ export const AdminProductSchema = z.object({
   description: z.string().nullish(),
   status: AdminProductStatusSchema,
   featuredImageUrl: z.string().nullish(),
-  totalInventory: z.number().int(),
+  /** False for print-on-demand items whose stock the supplier manages */
+  inventoryTracked: z.boolean(),
+  /** null when inventory isn't tracked, rather than a misleading 0 */
+  totalInventory: z.number().int().nullable(),
   variantCount: z.number().int().optional(),
   price: z.string().nullish(),
   createdAt: z.string(),
@@ -102,6 +107,13 @@ export const AdminOrderShippingAddressSchema = z
   })
   .nullable();
 
+// Synced back to the Shopify order by the supplier (Tapstitch) when it ships.
+export const AdminOrderTrackingSchema = z.object({
+  company: z.string().nullish(),
+  number: z.string().nullish(),
+  url: z.string().nullish(),
+});
+
 export const AdminOrderSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -114,6 +126,7 @@ export const AdminOrderSchema = z.object({
   customerName: z.string().optional(),
   customerEmail: z.string().nullish(),
   shippingAddress: AdminOrderShippingAddressSchema.optional(),
+  tracking: z.array(AdminOrderTrackingSchema),
   lineItems: z.array(AdminOrderLineItemSchema),
 });
 
