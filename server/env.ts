@@ -3,6 +3,14 @@
 
 import { z } from 'zod';
 
+// Load .env from the project root if it exists. Built into Node (20.12+),
+// so no dotenv dependency or version-specific CLI flag is needed.
+try {
+  process.loadEnvFile();
+} catch (err) {
+  if ((err as NodeJS.ErrnoException).code !== 'ENOENT') throw err;
+}
+
 const EnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   API_PORT: z.coerce.number().int().positive().default(3001),
