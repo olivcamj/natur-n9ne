@@ -403,7 +403,12 @@ paths:
   /api/storage/uploads/request-url:
     post:
       operationId: requestUploadUrl
-      summary: Request a presigned upload URL for design artwork
+      summary: Request a Shopify staged upload target for a product image
+      description: >
+        Returns a Shopify staged-upload target. POST the file to `uploadUrl` as
+        multipart/form-data with every `parameters` field first and `file` last,
+        then pass `resourceUrl` as `imageUrl` to
+        PUT /api/admin/products/{productId}/image.
       tags: [storage]
       security: [{ bearerAuth: [] }]
       requestBody:
@@ -413,7 +418,7 @@ paths:
             schema: { $ref: '#/components/schemas/UploadUrlInput' }
       responses:
         '200':
-          description: Presigned upload URL
+          description: Staged upload target
           content:
             application/json:
               schema: { $ref: '#/components/schemas/UploadUrlResponse' }
@@ -861,16 +866,23 @@ components:
 
     UploadUrlInput:
       type: object
-      required: [filename, contentType]
+      required: [filename, mimeType, fileSize]
       properties:
-        filename: { type: string }
-        contentType: { type: string, examples: [image/png] }
-        folder: { type: string }
+        filename: { type: string, minLength: 1, maxLength: 255 }
+        mimeType: { type: string, pattern: '^image/', examples: [image/png] }
+        fileSize: { type: integer, minimum: 1, maximum: 20971520, description: Bytes (max 20 MB) }
 
     UploadUrlResponse:
       type: object
-      required: [uploadUrl, objectPath, publicUrl]
+      required: [uploadUrl, parameters, resourceUrl]
       properties:
-        uploadUrl: { type: string }
-        objectPath: { type: string }
-        publicUrl: { type: string }
+        uploadUrl: { type: string, format: uri }
+        parameters:
+          type: array
+          items:
+            type: object
+            required: [name, value]
+            properties:
+              name: { type: string }
+              value: { type: string }
+        resourceUrl: { type: string, format: uri }
