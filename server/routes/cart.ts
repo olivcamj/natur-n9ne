@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, type RequestParamHandler } from 'express';
 import type { Cart, CartLine, CheckoutUrlResponse } from '@shared/storefront.types';
 import {
   CartInputSchema,
@@ -76,6 +76,14 @@ async function cartMutation(
   );
 
   const { cart, userErrors } = data[field];
+
+  // A cart that doesn't exist (or has expired) comes back with code INVALID,
+  // like any other bad input, so the `field` is what identifies it. Shopify may
+  // list it after other errors (e.g. a bad variant too), so check them all.
+  if (userErrors.some((e) => e.field?.at(-1) === 'cartId')) {
+    throw new HttpError(404, 'Cart not found');
+  }
+
   if (userErrors.length > 0 || !cart) {
     throw new HttpError(400, userErrors[0]?.message ?? fallbackError);
   }
@@ -97,6 +105,22 @@ const removeLines = (cartId: string, lineIds: string[]) =>
 
 // Note: Express already URL-decodes req.params, so cart/line GIDs arrive
 // ready to use. Decoding again would break (or throw on) IDs containing '%'.
+
+// Shopify rejects a malformed ID as a GraphQL error (which would surface as a
+// 500), so check the GID shape first. Real ones look like
+// "gid://shopify/Cart/<token>?key=…" and "gid://shopify/CartLine/<uuid>?cart=…".
+// A malformed ID can't name a cart that exists, so it's a 404 like an expired one.
+const MAX_GID_LENGTH = 256;
+
+function requireGid(prefix: string, notFound: string): RequestParamHandler {
+  return (_req, _res, next, id: string) => {
+    const valid = id.startsWith(prefix) && id.length > prefix.length && id.length <= MAX_GID_LENGTH;
+    next(valid ? undefined : new HttpError(404, notFound));
+  };
+}
+
+cartRouter.param('cartId', requireGid('gid://shopify/Cart/', 'Cart not found'));
+cartRouter.param('lineId', requireGid('gid://shopify/CartLine/', 'Cart line not found'));
 
 // POST /api/cart — create a cart with its first line
 cartRouter.post('/cart', async (req, res) => {
