@@ -75,6 +75,15 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+@theme {
+  --animate-ghost-float: ghost-float 6s ease-in-out infinite;
+
+  @keyframes ghost-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+}
+
 /* LIGHT MODE */
 :root {
   --button-outline: rgba(0, 0, 0, 0.1);
