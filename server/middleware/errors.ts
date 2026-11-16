@@ -20,7 +20,7 @@ export const notFound: RequestHandler = (req, _res, next) => {
 // Every error leaves the server as the ApiError shape from openapi.yaml.
 // HttpErrors were thrown on purpose, so their message is safe to send.
 // Anything else is unexpected: log it, and don't leak its details.
-export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
+export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
   if (err instanceof HttpError) {
     const body: ApiError = { error: err.message };
     
@@ -37,7 +37,8 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
     return;
   }
 
-  console.error(err);
+  // req.log carries the request id, so this lines up with the request's log line.
+  req.log.error({ err }, 'Unhandled error');
 
   const body: ApiError = { error: 'Internal server error' };
   res.status(500).json(body);
