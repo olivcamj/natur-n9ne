@@ -144,14 +144,20 @@ export const ListAdminOrdersParamsSchema = z.object({
 
 /* ---------------------------------- Storage ---------------------------------- */
 
+// Uploads go straight to Shopify's staged-upload storage (no bucket of our
+// own). Shopify rejects product images over 20 MB, so we refuse them up front.
+export const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
+
 export const UploadUrlInputSchema = z.object({
-  filename: z.string().min(1),
-  contentType: z.string().regex(/^image\//, 'Only image uploads are allowed'),
-  folder: z.string().optional(),
+  filename: z.string().min(1).max(255),
+  mimeType: z.string().regex(/^image\//, 'Only image uploads are allowed'),
+  fileSize: z.number().int().positive().max(MAX_UPLOAD_BYTES, 'Image must be 20 MB or smaller'),
 });
 
 export const UploadUrlResponseSchema = z.object({
-  uploadUrl: z.string(),
-  objectPath: z.string(),
-  publicUrl: z.string(),
+  /** POST a multipart form here: every `parameters` field, then `file` last. */
+  uploadUrl: z.url(),
+  parameters: z.array(z.object({ name: z.string(), value: z.string() })),
+  /** Pass as `imageUrl` to PUT /api/admin/products/{productId}/image. */
+  resourceUrl: z.url(),
 });
