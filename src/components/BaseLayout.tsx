@@ -4,7 +4,7 @@ import Footer from '@/components/storefront/Footer';
 
 export function BaseLayout({children}: {children: React.ReactNode}) {
   return (
-    <div>
+    <div className="min-h-dvh flex flex-col">
       <Header />
       <main className="flex-1 w-full flex flex-col">{children}</main>
       <Footer/>
