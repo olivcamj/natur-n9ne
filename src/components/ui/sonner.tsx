@@ -1,15 +1,13 @@
 "use client"
 
-import { useTheme } from "next-themes"
 import { Toaster as Sonner, type ToasterProps } from "sonner"
 import { CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Loader2Icon } from "lucide-react"
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme()
-
   return (
     <Sonner
-      theme={theme as ToasterProps["theme"]}
+      // The storefront is dark-only; "system" would show white toasts on light-mode computers.
+      theme="dark"
       className="toaster group"
       icons={{
         success: (
@@ -39,6 +37,10 @@ const Toaster = ({ ...props }: ToasterProps) => {
       toastOptions={{
         classNames: {
           toast: "cn-toast",
+          // Success toasts ("added to your bag") read like a handwritten note; see .toast-note in index.css.
+          success: "toast-note",
+          // Error toasts ("couldn't add to your bag") keep the plain font, with a red icon.
+          error: "toast-error",
         },
       }}
       {...props}
