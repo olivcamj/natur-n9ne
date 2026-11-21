@@ -1,69 +1,84 @@
-@import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@200;300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&family=Caveat:wght@400;500;600;700&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import "shadcn/tailwind.css";
+/* Fonts are self-hosted (bundled by Vite) rather than loaded from Google Fonts: a CSS @import
+   to another origin blocks rendering behind two extra round trips. Each package only declares
+   @font-face rules, so a face is downloaded the first time text on the page uses it, and only
+   for the character sets (unicode-range) that text needs. Anton, the hero headline, is also
+   preloaded from index.html by the preload-fonts plugin in vite.config.ts. */
 @import "@fontsource-variable/geist";
+/* Latin and Latin Extended only (English plus accented Western European letters), where a
+   package splits them out: every subset adds @font-face rules to this render-blocking CSS. */
+@import "@fontsource/anton/latin-400.css";
+@import "@fontsource/anton/latin-ext-400.css";
+@import "@fontsource-variable/exo-2";
+@import "@fontsource/jetbrains-mono/latin-400.css";
+@import "@fontsource/jetbrains-mono/latin-ext-400.css";
+@import "@fontsource/jetbrains-mono/latin-500.css";
+@import "@fontsource/jetbrains-mono/latin-ext-500.css";
+@import "@fontsource/rock-salt/latin-400.css";
+@import "@fontsource-variable/caveat";
 @plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --color-background: hsl(var(--background));
-  --color-foreground: hsl(var(--foreground));
-  --color-border: hsl(var(--border));
-  --color-input: hsl(var(--input));
-  --color-ring: hsl(var(--ring));
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
 
-  --color-card: hsl(var(--card));
-  --color-card-foreground: hsl(var(--card-foreground));
-  --color-card-border: hsl(var(--card-border));
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-card-border: var(--card-border);
 
-  --color-popover: hsl(var(--popover));
-  --color-popover-foreground: hsl(var(--popover-foreground));
-  --color-popover-border: hsl(var(--popover-border));
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover-border: var(--popover-border);
 
-  --color-primary: hsl(var(--primary));
-  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
   --color-primary-border: var(--primary-border);
 
-  --color-secondary: hsl(var(--secondary));
-  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
   --color-secondary-border: var(--secondary-border);
 
-  --color-muted: hsl(var(--muted));
-  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
   --color-muted-border: var(--muted-border);
 
-  --color-accent: hsl(var(--accent));
-  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
   --color-accent-border: var(--accent-border);
 
-  --color-destructive: hsl(var(--destructive));
-  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-destructive-border: var(--destructive-border);
 
-  --color-chart-1: hsl(var(--chart-1));
-  --color-chart-2: hsl(var(--chart-2));
-  --color-chart-3: hsl(var(--chart-3));
-  --color-chart-4: hsl(var(--chart-4));
-  --color-chart-5: hsl(var(--chart-5));
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
 
-  --color-sidebar: hsl(var(--sidebar));
-  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
-  --color-sidebar-border: hsl(var(--sidebar-border));
-  --color-sidebar-primary: hsl(var(--sidebar-primary));
-  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
   --color-sidebar-primary-border: var(--sidebar-primary-border);
-  --color-sidebar-accent: hsl(var(--sidebar-accent));
-  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-accent-border: var(--sidebar-accent-border);
-  --color-sidebar-ring: hsl(var(--sidebar-ring));
+  --color-sidebar-ring: var(--sidebar-ring);
 
   --font-sans: 'Geist Variable', sans-serif;
   --font-serif: var(--app-font-serif);
   --font-mono: var(--app-font-mono);
-  --font-display: 'Exo 2', sans-serif;
-  --font-cursive: 'Caveat', cursive;
+  --font-display: 'Exo 2 Variable', sans-serif;
+  --font-cursive: 'Caveat Variable', cursive;
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -78,6 +93,21 @@
 @theme {
   --animate-ghost-float: ghost-float 6s ease-in-out infinite;
   --animate-nebula-drift: nebula-drift 24s ease-in-out infinite alternate;
+  --animate-marquee: marquee var(--marquee-duration, 30s) linear infinite;
+
+  /* Home page poster type + signal orange */
+  --font-poster: 'Anton', 'Impact', sans-serif;
+  --font-label: 'JetBrains Mono', ui-monospace, monospace;
+  /* The artist's hand: artwork names only. Wide and rough, so keep it to a few words. */
+  --font-artist: 'Rock Salt', 'Caveat Variable', cursive;
+  --color-signal: #ff5f1f;
+  --color-signal-ink: #0b0b0b;
+  --color-ink: #0b0b0b;
+
+  @keyframes marquee {
+    from { transform: translate3d(0, 0, 0); }
+    to { transform: translate3d(-50%, 0, 0); }
+  }
 
   /* Otherworldly palette (plain oklch — not wrapped in hsl()) */
   --color-alien: oklch(0.87 0.22 150);
@@ -112,7 +142,7 @@
   --border: oklch(0.922 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
-  --card-border: 0 0% 10%;
+  --card-border: hsl(0 0% 10%);
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-border: oklch(0.922 0 0);
@@ -123,7 +153,7 @@
   --sidebar-ring: oklch(0.708 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --popover-border: 0 0% 10%;
+  --popover-border: hsl(0 0% 10%);
   --primary: oklch(0.205 0 0);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
@@ -133,7 +163,7 @@
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: 0 0% 98%;
+  --destructive-foreground: hsl(0 0% 98%);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
   --chart-1: oklch(0.87 0 0);
@@ -142,8 +172,8 @@
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
 
-  --app-font-sans: 'Space Grotesk', sans-serif;
-  --app-font-serif: 'Exo 2', sans-serif;
+  --app-font-sans: 'Geist Variable', sans-serif;
+  --app-font-serif: 'Exo 2 Variable', sans-serif;
   --app-font-mono: Menlo, monospace;
   --radius: 0.625rem; /* 8px */
   --shadow-2xs: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0); /*replace with H S L */
@@ -170,51 +200,51 @@
   /* Automatically computed borders - intensity can be controlled by the user by the --opaque-button-border-intensity setting */
 
   /* Fallback for older browsers */
-  --sidebar-primary-border: hsl(var(--sidebar-primary));
+  --sidebar-primary-border: var(--sidebar-primary);
   --sidebar-primary-border: hsl(
-    from hsl(var(--sidebar-primary)) h s
+    from var(--sidebar-primary) h s
       calc(l + var(--opaque-button-border-intensity)) / alpha
   );
 
   /* Fallback for older browsers */
-  --sidebar-accent-border: hsl(var(--sidebar-accent));
+  --sidebar-accent-border: var(--sidebar-accent);
   --sidebar-accent-border: hsl(
-    from hsl(var(--sidebar-accent)) h s
+    from var(--sidebar-accent) h s
       calc(l + var(--opaque-button-border-intensity)) / alpha
   );
 
   /* Fallback for older browsers */
-  --primary-border: hsl(var(--primary));
+  --primary-border: var(--primary);
   --primary-border: hsl(
-    from hsl(var(--primary)) h s
+    from var(--primary) h s
       calc(l + var(--opaque-button-border-intensity)) / alpha
   );
 
   /* Fallback for older browsers */
-  --secondary-border: hsl(var(--secondary));
+  --secondary-border: var(--secondary);
   --secondary-border: hsl(
-    from hsl(var(--secondary)) h s
+    from var(--secondary) h s
       calc(l + var(--opaque-button-border-intensity)) / alpha
   );
 
   /* Fallback for older browsers */
-  --muted-border: hsl(var(--muted));
+  --muted-border: var(--muted);
   --muted-border: hsl(
-    from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) /
+    from var(--muted) h s calc(l + var(--opaque-button-border-intensity)) /
       alpha
   );
 
   /* Fallback for older browsers */
-  --accent-border: hsl(var(--accent));
+  --accent-border: var(--accent);
   --accent-border: hsl(
-    from hsl(var(--accent)) h s
+    from var(--accent) h s
       calc(l + var(--opaque-button-border-intensity)) / alpha
   );
 
   /* Fallback for older browsers */
-  --destructive-border: hsl(var(--destructive));
+  --destructive-border: var(--destructive);
   --destructive-border: hsl(
-    from hsl(var(--destructive)) h s
+    from var(--destructive) h s
       calc(l + var(--opaque-button-border-intensity)) / alpha
   );
 }
@@ -234,7 +264,7 @@
   --border: oklch(1 0 0 / 10%);
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);
-  --card-border: 0 0% 10%;
+  --card-border: hsl(0 0% 10%);
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
@@ -245,7 +275,7 @@
   --sidebar-ring: oklch(0.556 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --popover-border: 0 0% 10%;
+  --popover-border: hsl(0 0% 10%);
   --primary: oklch(0.922 0 0);
   --primary-foreground: oklch(0.205 0 0);
   --secondary: oklch(0.269 0 0);
@@ -255,7 +285,7 @@
   --accent: oklch(0.269 0 0);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: 0 0% 98%;
+  --destructive-foreground: hsl(0 0% 98%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
   --chart-1: oklch(0.87 0 0);
@@ -340,6 +370,51 @@
     background-size: 280px 280px, 340px 340px, 420px 420px, 380px 380px, 220px 220px;
   }
 
+  /* Product photo backdrop: the grey night haze from the campaign shots, brightest
+     behind the garment and sinking to the page black at the edges and bottom. */
+  .product-stage {
+    background:
+      radial-gradient(ellipse 60% 55% at 50% 42%, #2e2e30 0%, #232325 40%, transparent 78%),
+      linear-gradient(to bottom, #161617 0%, #121213 70%, var(--color-ink) 100%);
+  }
+
+  /* Frosted-glass lettering: see-through fill with a light sheen across the top
+     and a crisp edge so the letters still read over a photo. */
+  .text-glass {
+    color: color-mix(in oklab, white 30%, transparent);
+    -webkit-text-stroke: 1px color-mix(in oklab, white 45%, transparent);
+    text-shadow: 0 8px 32px rgb(0 0 0 / 0.35);
+  }
+
+  @supports ((background-clip: text) or (-webkit-background-clip: text)) {
+    .text-glass {
+      color: transparent;
+      background-image: linear-gradient(
+        170deg,
+        color-mix(in oklab, white 60%, transparent) 0%,
+        color-mix(in oklab, white 18%, transparent) 45%,
+        color-mix(in oklab, white 10%, transparent) 60%,
+        color-mix(in oklab, white 32%, transparent) 100%
+      );
+      -webkit-background-clip: text;
+      background-clip: text;
+      /* text-shadow would paint through the transparent fill, so use a filter instead */
+      text-shadow: none;
+      filter: drop-shadow(0 8px 24px rgb(0 0 0 / 0.4));
+    }
+  }
+
+  /* Glass lettering trades contrast for looks. Visitors who ask for more contrast,
+     or use Windows high-contrast mode, get solid letters instead. */
+  @media (prefers-contrast: more), (forced-colors: active) {
+    .text-glass {
+      color: white;
+      background: none;
+      -webkit-text-stroke: 0;
+      filter: none;
+    }
+  }
+
   /* Bioluminescent text glow */
   .alien-glow {
     text-shadow:
@@ -350,7 +425,8 @@
 
   @media (prefers-reduced-motion: reduce) {
     .animate-nebula-drift,
-    .animate-ghost-float {
+    .animate-ghost-float,
+    .animate-marquee {
       animation: none;
     }
   }
@@ -363,7 +439,7 @@
   /* Placeholder styling for contentEditable div */
   [contenteditable][data-placeholder]:empty::before {
     content: attr(data-placeholder);
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
     pointer-events: none;
   }
 
@@ -444,4 +520,22 @@
   .border.hover-elevate:not(.no-hover-interaction-elevate)::after {
     inset: -1px;
   }
+}
+
+/* Success toast as a quick pen note. Caveat runs small, so it's set larger than the
+   toast's normal text. Error toasts keep the plain face so they read fast.
+   Outside @layer and extra-specific on purpose: Sonner injects its own unlayered CSS
+   at runtime, which would otherwise reset the weight and line height. */
+[data-sonner-toast][data-styled='true'].toast-note [data-title] {
+  font-family: 'Caveat Variable', cursive;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+[data-sonner-toast][data-styled='true'].toast-note [data-icon] {
+  /* Bright alien green reads as "done" at a glance (about 11:1 on the dark toast; alien-dim is about 3.7:1). */
+  color: var(--color-alien);
+}
+[data-sonner-toast][data-styled='true'].toast-error [data-icon] {
+  color: var(--color-destructive);
 }
