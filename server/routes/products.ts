@@ -46,22 +46,70 @@ const PRODUCT_FIELDS = `#graphql
       }
     }
     options { name values }
+    # 3D models live in media, not images. Only the first model is used.
+    media(first: 10) {
+      nodes {
+        mediaContentType
+        ... on Model3d {
+          alt
+          previewImage { url altText }
+          sources { url mimeType format }
+        }
+      }
+    }
+    # Null unless the metafield exists and has Storefront API access turned on.
+    artworkName: metafield(namespace: "custom", key: "artwork_name") { value }
+    artworkStory: metafield(namespace: "custom", key: "artwork_story") { value }
   }
 `;
 
 // Shopify wraps lists in { nodes }; our API returns plain arrays.
-type ShopifyProduct = Omit<Product, 'images' | 'variants'> & {
+type ShopifyMedia = {
+  mediaContentType: string;
+  alt?: string | null;
+  previewImage?: { url: string; altText?: string | null } | null;
+  sources?: { url: string; mimeType: string; format: string }[];
+};
+
+type ShopifyProduct = Omit<Product, 'images' | 'variants' | 'artwork' | 'model'> & {
   images: { nodes: ProductImage[] };
   variants: { nodes: ProductVariant[] };
+  media?: { nodes: ShopifyMedia[] };
+  artworkName?: { value: string } | null;
+  artworkStory?: { value: string } | null;
 };
+
+// Shopify converts an uploaded model into several formats: GLB for browsers,
+// USDZ for iPhone AR. Without a GLB there's nothing a browser can show.
+function mapModel(media: ShopifyMedia[] = []): Product['model'] {
+  const model = media.find((m) => m.mediaContentType === 'MODEL_3D');
+  const glb = model?.sources?.find((s) => s.format === 'glb' || s.mimeType === 'model/gltf-binary');
+  if (!model || !glb) return undefined;
+  const usdz = model.sources?.find((s) => s.format === 'usdz');
+  return {
+    glbUrl: glb.url,
+    ...(usdz ? { usdzUrl: usdz.url } : {}),
+    ...(model.previewImage?.url ? { posterUrl: model.previewImage.url } : {}),
+    ...(model.alt ? { alt: model.alt } : {}),
+  };
+}
 
 type ShopifyProductPage = {
   pageInfo: ProductConnectionPageInfo;
   nodes: ShopifyProduct[];
 };
 
-function mapProduct({ images, variants, ...rest }: ShopifyProduct): Product {
-  return { ...rest, images: images.nodes, variants: variants.nodes };
+function mapProduct({ images, variants, media, artworkName, artworkStory, ...rest }: ShopifyProduct): Product {
+  const name = artworkName?.value.trim() || undefined;
+  const story = artworkStory?.value.trim();
+  const model = mapModel(media?.nodes);
+  return {
+    ...rest,
+    images: images.nodes,
+    variants: variants.nodes,
+    ...(story ? { artwork: { name, story } } : {}),
+    ...(model ? { model } : {}),
+  };
 }
 
 // Collection products use a different sort enum than the product list:
@@ -122,10 +170,14 @@ productsRouter.get('/products', async (req, res) => {
   res.json(body);
 });
 
+const FEATURED_MAX = 20;
+
 // GET /api/products/featured (must be registered before /products/:handle)
 productsRouter.get('/products/featured', async (req, res) => {
   const params = parse(GetFeaturedProductsParamsSchema, req.query);
-  const first = Math.min(params.first ?? 6, 20);
+  // Without `first`, return every featured product up to the cap, so the home page rail
+  // grows and shrinks with the store instead of with a number in the frontend.
+  const first = Math.min(params.first ?? FEATURED_MAX, FEATURED_MAX);
 
   const data = await shopifyStorefrontRequest<{ products: { nodes: ShopifyProduct[] } }>(
     `#graphql
