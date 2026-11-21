@@ -20,8 +20,9 @@ describe('securityHeaders', () => {
     );
 
     expect(csp['img-src']).toEqual(expect.arrayContaining(["'self'", 'https://cdn.shopify.com']));
-    expect(csp['style-src']).toContain('https://fonts.googleapis.com');
-    expect(csp['font-src']).toContain('https://fonts.gstatic.com');
+    // Fonts are self-hosted, so no font CDN is allowed.
+    expect(csp['style-src']).toEqual(["'self'", "'unsafe-inline'"]);
+    expect(csp['font-src']).toEqual(["'self'", 'data:']);
     expect(csp['connect-src']).toEqual([
       "'self'",
       'https://shopify-staged-uploads.storage.googleapis.com',

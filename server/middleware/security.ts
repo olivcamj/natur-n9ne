@@ -9,9 +9,9 @@ export const securityHeaders = helmet({
     directives: {
       // Product images come from Shopify's CDN.
       'img-src': ["'self'", 'data:', 'blob:', 'https://cdn.shopify.com'],
-      // Google Fonts (Inter), loaded in index.html.
-      'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
-      'font-src': ["'self'", 'data:', 'https://fonts.gstatic.com'],
+      // Fonts are self-hosted (bundled by Vite), so no font CDN is allowed.
+      'style-src': ["'self'", "'unsafe-inline'"],
+      'font-src': ["'self'", 'data:'],
       // Admin image uploads go from the browser straight to Shopify's staged
       // upload storage (see routes/storage.ts).
       'connect-src': ["'self'", 'https://shopify-staged-uploads.storage.googleapis.com'],
